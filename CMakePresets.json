@@ -17,7 +17,9 @@
         "YOUTUBE_CLIENTID": {"type": "STRING", "value": "$penv{YOUTUBE_CLIENTID}"},
         "YOUTUBE_CLIENTID_HASH": {"type": "STRING", "value": "$penv{YOUTUBE_CLIENTID_HASH}"},
         "YOUTUBE_SECRET": {"type": "STRING", "value": "$penv{YOUTUBE_SECRET}"},
-        "YOUTUBE_SECRET_HASH": {"type": "STRING", "value": "$penv{YOUTUBE_SECRET_HASH}"}
+        "YOUTUBE_SECRET_HASH": {"type": "STRING", "value": "$penv{YOUTUBE_SECRET_HASH}"},
+        "MOQ_VERSION": "0.2.4",
+        "MOQ_ARCHIVE": "tar.gz"
       }
     },
     {
@@ -105,7 +107,8 @@
         "VIRTUALCAM_SOURCE_UUID": {"type": "STRING", "value": "A8D7B8AA-65AD-4D21-9C42-66480DBFA8E1"},
         "SPARKLE_APPCAST_URL": {"type": "STRING", "value": "https://obsproject.com/osx_update/updates_$(ARCHS)_v2.xml"},
         "SPARKLE_PUBLIC_KEY": {"type": "STRING", "value": "HQ5/Ba9VHOuEWaM0jtVjZzgHKFJX9YTl+HNVpgNF0iM="},
-        "ENABLE_BROWSER": true
+        "ENABLE_BROWSER": true,
+        "MOQ_TARGET": "aarch64-apple-darwin"
       }
     },
     {
@@ -139,7 +142,8 @@
         "ENABLE_AJA": false,
         "ENABLE_VLC": true,
         "ENABLE_WAYLAND": true,
-        "ENABLE_WEBRTC": false
+        "ENABLE_WEBRTC": false,
+        "MOQ_TARGET": "x86_64-unknown-linux-gnu"
       }
     },
     {
@@ -168,7 +172,9 @@
       "cacheVariables": {
         "GPU_PRIORITY_VAL": {"type": "STRING", "value": "$penv{GPU_PRIORITY_VAL}"},
         "VIRTUALCAM_GUID": {"type": "STRING", "value": "A3FCE0F5-3493-419F-958A-ABA1250EC20B"},
-        "ENABLE_BROWSER": true
+        "ENABLE_BROWSER": true,
+        "MOQ_TARGET": "x86_64-pc-windows-msvc",
+        "MOQ_ARCHIVE": "zip"
       }
     },
     {
