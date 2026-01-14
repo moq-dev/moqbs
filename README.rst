@@ -1,6 +1,6 @@
 MOQBS - OBS Studio with MoQ Support
-Fork from OBS Studio <https://obsproject.com>
 ===================================
+Fork from OBS Studio <https://obsproject.com>
 
 .. image:: https://github.com/obsproject/obs-studio/actions/workflows/push.yaml/badge.svg?branch=master
    :alt: OBS Studio Build Status - GitHub Actions
