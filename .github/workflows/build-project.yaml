@@ -249,6 +249,7 @@ jobs:
   flatpak-build:
     name: Flatpak 📦
     runs-on: ubuntu-24.04
+    if: github.repository_owner == 'obsproject'
     needs: check-event
     defaults:
       run:
