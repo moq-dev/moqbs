@@ -379,7 +379,7 @@ jobs:
     name: Windows 🪟
     strategy:
       matrix:
-        architecture: [x64, arm64]
+        architecture: [x64]
     runs-on: windows-2022
     needs: check-event
     defaults:
