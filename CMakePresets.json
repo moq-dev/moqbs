@@ -108,7 +108,7 @@
         "SPARKLE_APPCAST_URL": {"type": "STRING", "value": "https://obsproject.com/osx_update/updates_$(ARCHS)_v2.xml"},
         "SPARKLE_PUBLIC_KEY": {"type": "STRING", "value": "HQ5/Ba9VHOuEWaM0jtVjZzgHKFJX9YTl+HNVpgNF0iM="},
         "ENABLE_BROWSER": true,
-        "MOQ_TARGET": "aarch64-apple-darwin"
+        "MOQ_TARGET": "universal-apple-darwin"
       }
     },
     {
