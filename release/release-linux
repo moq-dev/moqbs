@@ -12,7 +12,7 @@ echo "Version: $VERSION"
 
 # Build Docker image
 echo "Building Docker image..."
-docker build --platform linux/amd64 -t moqbs-linux "$PROJECT_ROOT"
+docker build --platform linux/amd64 -t moqbs-linux -f "$SCRIPT_DIR/Dockerfile" "$PROJECT_ROOT"
 
 # Extract DEB from container
 echo "Extracting artifact..."

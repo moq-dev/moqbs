@@ -2,7 +2,7 @@
 /*
 
 # Except for default project files
-!/bin
+!/release
 !/.github
 !/build-aux
 !/cmake
@@ -21,7 +21,6 @@
 !.gitmodules
 !.gitignore
 !.dockerignore
-!Dockerfile
 !.mailmap
 !.swift-format
 !AUTHORS
@@ -33,10 +32,8 @@
 !CONTRIBUTING.rst
 !COPYING
 !INSTALL
-!justfile
 !README.rst
 !wrangler.toml
-!.env
 
 # Exclude lock files
 *.lock.json
