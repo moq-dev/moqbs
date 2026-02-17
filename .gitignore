@@ -2,6 +2,7 @@
 /*
 
 # Except for default project files
+!/bin
 !/.github
 !/build-aux
 !/cmake
@@ -30,7 +31,9 @@
 !CONTRIBUTING.rst
 !COPYING
 !INSTALL
+!justfile
 !README.rst
+!wrangler.toml
 
 # Exclude lock files
 *.lock.json
@@ -42,6 +45,9 @@
 
 # Exclude modified Flatpak files
 build-aux/flatpak-github-action-modified-*
+
+# Exclude Wrangler cache
+.wrangler/
 
 # Exclude macOS legacy resource forks
 .DS_Store
