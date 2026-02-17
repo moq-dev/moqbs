@@ -7,12 +7,12 @@ BEGIN
   BEGIN
     BLOCK "040904B0"
     BEGIN
-      VALUE "CompanyName", "OBS"
-      VALUE "FileDescription", "OBS Studio"
+      VALUE "CompanyName", "MOQBS"
+      VALUE "FileDescription", "MOQBS"
       VALUE "FileVersion", "${OBS_VERSION_CANONICAL}"
       VALUE "InternalName", "obs"
       VALUE "OriginalFilename", "obs"
-      VALUE "ProductName", "OBS Studio"
+      VALUE "ProductName", "MOQBS"
       VALUE "ProductVersion", "${OBS_VERSION_CANONICAL}"
       VALUE "Comments", "Free and open source software for video recording and live streaming"
       VALUE "LegalCopyright", "${OBS_LEGAL_COPYRIGHT}"
