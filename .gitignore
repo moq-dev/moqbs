@@ -20,6 +20,8 @@
 !.git-blame-ignore-devs
 !.gitmodules
 !.gitignore
+!.dockerignore
+!Dockerfile
 !.mailmap
 !.swift-format
 !AUTHORS

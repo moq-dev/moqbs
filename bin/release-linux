@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Compute version
+OBS_VERSION=$(git -C "$PROJECT_ROOT" describe --tags --always | sed 's/-moqbs.*//')
+COMMIT_HASH=$(git -C "$PROJECT_ROOT" rev-parse --short=7 HEAD)
+VERSION="${OBS_VERSION}-${COMMIT_HASH}"
+echo "Version: $VERSION"
+
+# Build Docker image
+echo "Building Docker image..."
+docker build --platform linux/amd64 -t moqbs-linux "$PROJECT_ROOT"
+
+# Extract DEB from container
+echo "Extracting artifact..."
+CONTAINER_ID=$(docker create --platform linux/amd64 moqbs-linux)
+mkdir -p "$PROJECT_ROOT/build_linux"
+
+# Find the .deb filename inside the container (exclude debug .ddeb)
+DEB_PATH=$(docker run --rm --platform linux/amd64 moqbs-linux sh -c 'ls /build/build_ubuntu/*.deb 2>/dev/null | grep -v dbgsym | head -1')
+if [ -z "$DEB_PATH" ]; then
+    docker rm "$CONTAINER_ID"
+    echo "Error: No .deb found in build output"
+    exit 1
+fi
+
+OUTPUT_NAME="moqbs-linux-x86_64.deb"
+docker cp "$CONTAINER_ID:$DEB_PATH" "$PROJECT_ROOT/build_linux/$OUTPUT_NAME"
+docker rm "$CONTAINER_ID"
+echo "Created: $PROJECT_ROOT/build_linux/$OUTPUT_NAME"
+
+# Upload to R2
+if [ -n "${R2_BUCKET:-}" ]; then
+    echo "Uploading to R2..."
+    bunx wrangler r2 object put "$R2_BUCKET/linux/x86_64/$VERSION/$OUTPUT_NAME" \
+        --remote --file "$PROJECT_ROOT/build_linux/$OUTPUT_NAME"
+    echo "Uploaded: https://obs.moq.dev/linux/x86_64/$VERSION/$OUTPUT_NAME"
+fi
+
+echo ""
+echo "Build complete!"
+echo "DEB: $PROJECT_ROOT/build_linux/$OUTPUT_NAME"

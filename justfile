@@ -36,6 +36,18 @@ release-windows:
 clean:
   rm -rf build_macos
 
+# Build for Linux x86_64 (via Docker)
+build-linux:
+  bash ./bin/release-linux
+
+# Release for Linux x86_64 with R2 upload (via Docker)
+release-linux:
+  op run --env-file=".env" -- bash ./bin/release-linux
+
 # Clean Windows build artifacts
 clean-windows:
   pwsh -Command "if (Test-Path build_x64) { Remove-Item -Recurse -Force build_x64 }"
+
+# Clean Linux build artifacts
+clean-linux:
+  rm -rf build_linux
