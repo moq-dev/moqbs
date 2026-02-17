@@ -34,6 +34,7 @@
 !justfile
 !README.rst
 !wrangler.toml
+!.env
 
 # Exclude lock files
 *.lock.json
