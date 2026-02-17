@@ -43,7 +43,7 @@ setup_signing_keychain() {
         head -n 1)
 
     if [ -z "$identity" ]; then
-        echo "Error: Could not find Developer ID Application identity"
+        echo "Error: Could not find Developer ID Application identity" >&2
         return 1
     fi
 

@@ -47,13 +47,13 @@ echo ""
 echo "Configuring CMake..."
 cd "$PROJECT_ROOT"
 cmake -S . --preset macos \
-    -DCMAKE_OSX_ARCHITECTURES=$ARCH \
-    -DCMAKE_BUILD_TYPE=$CONFIG
+    -DCMAKE_OSX_ARCHITECTURES="$ARCH" \
+    -DCMAKE_BUILD_TYPE="$CONFIG"
 
 # Build
 echo ""
 echo "Building..."
-cmake --build "$BUILD_DIR" --config $CONFIG -j
+cmake --build "$BUILD_DIR" --config "$CONFIG" -j
 
 # Find the built app
 APP_PATH="$BUILD_DIR/UI/$CONFIG/OBS.app"
@@ -103,6 +103,10 @@ codesign --sign "$CODESIGN_IDENT" \
 
 # Notarize if requested
 if [ "$NOTARIZE" = "true" ]; then
+    if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_PASSWORD:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ]; then
+        echo "Error: Notarization requires APPLE_ID, APPLE_PASSWORD, and APPLE_TEAM_ID to be set"
+        exit 1
+    fi
     echo ""
     echo "Submitting for notarization..."
     echo "This can take 10-30 minutes..."
