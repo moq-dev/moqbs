@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Arguments
+ARCH="${1:-arm64}"              # arm64 or x86_64
+CONFIG="${2:-RelWithDebInfo}"   # Debug, RelWithDebInfo, Release
+NOTARIZE="${3:-false}"          # true or false
+
+# Validate
+if [[ ! "$ARCH" =~ ^(arm64|x86_64)$ ]]; then
+    echo "Usage: $0 [arm64|x86_64] [Debug|RelWithDebInfo|Release] [true|false]"
+    exit 1
+fi
+
+echo "Building moqbs for macOS $ARCH ($CONFIG configuration)"
+
+# Setup paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BUILD_DIR="$PROJECT_ROOT/build_macos"
+
+# Compute version from git
+OBS_VERSION=$(git -C "$PROJECT_ROOT" describe --tags --always | sed 's/-moqbs.*//')
+COMMIT_HASH=$(git -C "$PROJECT_ROOT" rev-parse --short=7 HEAD)
+VERSION="${OBS_VERSION}-${COMMIT_HASH}"
+echo "Version: $VERSION"
+
+# Source keychain library
+source "$SCRIPT_DIR/lib/keychain.sh"
+
+# Create temp directory
+TEMP_DIR=$(mktemp -d)
+trap 'cleanup_signing_keychain "$TEMP_DIR"; rm -rf "$TEMP_DIR"' EXIT
+
+# Setup signing
+echo ""
+echo "Setting up code signing..."
+CODESIGN_IDENT=$(setup_signing_keychain "$TEMP_DIR")
+echo "Using identity: $CODESIGN_IDENT"
+
+# Export for CMake
+export CODESIGN_IDENT
+export CODESIGN_TEAM="$APPLE_TEAM_ID"
+
+# Configure CMake
+echo ""
+echo "Configuring CMake..."
+cd "$PROJECT_ROOT"
+cmake -S . --preset macos \
+    -DCMAKE_OSX_ARCHITECTURES="$ARCH" \
+    -DCMAKE_BUILD_TYPE="$CONFIG"
+
+# Build
+echo ""
+echo "Building..."
+cmake --build "$BUILD_DIR" --config "$CONFIG" -j
+
+# Find the built app
+APP_PATH="$BUILD_DIR/UI/$CONFIG/OBS.app"
+if [ ! -d "$APP_PATH" ]; then
+    APP_PATH="$BUILD_DIR/frontend/$CONFIG/OBS.app"
+fi
+
+if [ ! -d "$APP_PATH" ]; then
+    echo "Error: Could not find OBS.app in $BUILD_DIR"
+    exit 1
+fi
+
+echo ""
+echo "Built app at: $APP_PATH"
+
+# Copy to root of build dir for DMG creation
+rm -rf "$BUILD_DIR/OBS.app"
+cp -R "$APP_PATH" "$BUILD_DIR/OBS.app"
+
+# Create DMG
+echo ""
+echo "Creating DMG..."
+
+DMG_NAME="moqbs-macos-$ARCH"
+VOLUME_NAME="OBS Studio"
+
+# Create temporary directory for DMG contents
+DMG_TEMP="$TEMP_DIR/dmg"
+mkdir -p "$DMG_TEMP"
+cp -R "$BUILD_DIR/OBS.app" "$DMG_TEMP/"
+
+# Create Applications symlink
+ln -s /Applications "$DMG_TEMP/Applications"
+
+# Create DMG
+hdiutil create -volname "$VOLUME_NAME" \
+    -srcfolder "$DMG_TEMP" \
+    -ov -format UDZO \
+    "$BUILD_DIR/$DMG_NAME.dmg"
+
+# Sign DMG
+echo ""
+echo "Signing DMG..."
+codesign --sign "$CODESIGN_IDENT" \
+    --timestamp \
+    "$BUILD_DIR/$DMG_NAME.dmg"
+
+# Notarize if requested
+if [ "$NOTARIZE" = "true" ]; then
+    if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_PASSWORD:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ]; then
+        echo "Error: Notarization requires APPLE_ID, APPLE_PASSWORD, and APPLE_TEAM_ID to be set"
+        exit 1
+    fi
+    echo ""
+    echo "Submitting for notarization..."
+    echo "This can take 10-30 minutes..."
+
+    # Store credentials
+    xcrun notarytool store-credentials "moqbs-notarization" \
+        --apple-id "$APPLE_ID" \
+        --team-id "$APPLE_TEAM_ID" \
+        --password "$APPLE_PASSWORD"
+
+    # Submit and wait
+    xcrun notarytool submit "$BUILD_DIR/$DMG_NAME.dmg" \
+        --keychain-profile "moqbs-notarization" \
+        --wait
+
+    # Staple
+    echo ""
+    echo "Stapling notarization ticket..."
+    xcrun stapler staple "$BUILD_DIR/$DMG_NAME.dmg"
+fi
+
+# Upload to R2
+if [ -n "${R2_BUCKET:-}" ]; then
+    echo ""
+    echo "Uploading to R2..."
+    bunx wrangler r2 object put "$R2_BUCKET/macos/$ARCH/$VERSION/$DMG_NAME.dmg" \
+        --remote --file "$BUILD_DIR/$DMG_NAME.dmg"
+    echo "Uploaded: https://obs.moq.dev/macos/$ARCH/$VERSION/$DMG_NAME.dmg"
+fi
+
+# Success
+echo ""
+echo "✅ Build complete!"
+echo ""
+echo "DMG created: $BUILD_DIR/$DMG_NAME.dmg"
+echo ""
+echo "To verify signature:"
+echo "  codesign -vvv --deep --strict $BUILD_DIR/$DMG_NAME.dmg"
+echo ""
+echo "To test with Gatekeeper:"
+echo "  spctl -a -vv $BUILD_DIR/OBS.app"
+
+# Cleanup happens automatically via trap
