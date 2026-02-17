@@ -30,7 +30,7 @@ void OBSBasic::SystemTrayInit()
 	QIcon trayIconFile = QIcon(":/res/images/obs.png");
 #endif
 	trayIcon = new QSystemTrayIcon(QIcon::fromTheme("obs-tray", trayIconFile), this);
-	trayIcon->setToolTip("OBS Studio");
+	trayIcon->setToolTip("MOQBS");
 
 	showHide = new QAction(QTStr("Basic.SystemTray.Show"), trayIcon.data());
 	sysTrayStream =
@@ -102,7 +102,7 @@ void OBSBasic::SysTrayNotify(const QString &text, QSystemTrayIcon::MessageIcon n
 {
 	if (trayIcon && trayIcon->isVisible() && QSystemTrayIcon::supportsMessages()) {
 		QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::MessageIcon(n);
-		trayIcon->showMessage("OBS Studio", text, icon, 10000);
+		trayIcon->showMessage("MOQBS", text, icon, 10000);
 	}
 }
 

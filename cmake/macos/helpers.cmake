@@ -43,7 +43,7 @@ function(set_target_properties_obs target)
       set_target_properties(
         ${target}
         PROPERTIES
-          OUTPUT_NAME OBS
+          OUTPUT_NAME MOQBS
           MACOSX_BUNDLE TRUE
           MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/cmake/macos/Info.plist.in"
           XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY YES
@@ -54,8 +54,8 @@ function(set_target_properties_obs target)
 
       set_target_xcode_properties(
         ${target}
-        PROPERTIES PRODUCT_BUNDLE_IDENTIFIER com.obsproject.obs-studio
-                   PRODUCT_NAME OBS
+        PROPERTIES PRODUCT_BUNDLE_IDENTIFIER dev.moq.moqbs
+                   PRODUCT_NAME MOQBS
                    ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
                    CURRENT_PROJECT_VERSION ${OBS_BUILD_NUMBER}
                    MARKETING_VERSION ${OBS_VERSION_CANONICAL}
@@ -64,11 +64,11 @@ function(set_target_properties_obs target)
                    CLANG_ENABLE_OBJC_ARC YES
                    SKIP_INSTALL NO
                    INSTALL_PATH "$(LOCAL_APPS_DIR)"
-                   INFOPLIST_KEY_CFBundleDisplayName "OBS Studio"
+                   INFOPLIST_KEY_CFBundleDisplayName "MOQBS"
                    INFOPLIST_KEY_NSHumanReadableCopyright "(c) 2012-${CURRENT_YEAR} Lain Bailey"
-                   INFOPLIST_KEY_NSCameraUsageDescription "OBS needs to access the camera to enable camera sources to work."
-                   INFOPLIST_KEY_NSMicrophoneUsageDescription "OBS needs to access the microphone to enable audio input."
-                   INFOPLIST_KEY_NSAppleEventsUsageDescription "OBS needs to access background events to enable hotkeys while not in focus."
+                   INFOPLIST_KEY_NSCameraUsageDescription "MOQBS needs to access the camera to enable camera sources to work."
+                   INFOPLIST_KEY_NSMicrophoneUsageDescription "MOQBS needs to access the microphone to enable audio input."
+                   INFOPLIST_KEY_NSAppleEventsUsageDescription "MOQBS needs to access background events to enable hotkeys while not in focus."
       )
 
       get_property(obs_dependencies GLOBAL PROPERTY _OBS_DEPENDENCIES)
@@ -224,7 +224,7 @@ function(set_target_properties_obs target)
       PROPERTIES DYLIB_COMPATIBILITY_VERSION 1.0
                  DYLIB_CURRENT_VERSION ${OBS_VERSION_MAJOR}
                  PRODUCT_NAME ${target}
-                 PRODUCT_BUNDLE_IDENTIFIER com.obsproject.${target}
+                 PRODUCT_BUNDLE_IDENTIFIER dev.moq.${target}
                  SKIP_INSTALL YES
     )
 
@@ -232,7 +232,7 @@ function(set_target_properties_obs target)
     if(is_framework)
       set_target_properties(
         ${target}
-        PROPERTIES FRAMEWORK_VERSION A MACOSX_FRAMEWORK_IDENTIFIER com.obsproject.${target}
+        PROPERTIES FRAMEWORK_VERSION A MACOSX_FRAMEWORK_IDENTIFIER dev.moq.${target}
       )
 
       set_target_xcode_properties(
@@ -241,7 +241,7 @@ function(set_target_properties_obs target)
                    DEVELOPMENT_TEAM ""
                    SKIP_INSTALL YES
                    PRODUCT_NAME ${target}
-                   PRODUCT_BUNDLE_IDENTIFIER com.obsproject.${target}
+                   PRODUCT_BUNDLE_IDENTIFIER dev.moq.${target}
                    CURRENT_PROJECT_VERSION ${OBS_BUILD_NUMBER}
                    MARKETING_VERSION ${OBS_VERSION_CANONICAL}
                    GENERATE_INFOPLIST_FILE YES
@@ -258,13 +258,13 @@ function(set_target_properties_obs target)
       set_target_xcode_properties(
         ${target}
         PROPERTIES PRODUCT_NAME ${target}
-                   PRODUCT_BUNDLE_IDENTIFIER com.obsproject.${target}
+                   PRODUCT_BUNDLE_IDENTIFIER dev.moq.${target}
       )
     elseif(target STREQUAL obslua)
       set_target_xcode_properties(
         ${target}
         PROPERTIES PRODUCT_NAME ${target}
-                   PRODUCT_BUNDLE_IDENTIFIER com.obsproject.${target}
+                   PRODUCT_BUNDLE_IDENTIFIER dev.moq.${target}
       )
     elseif(target STREQUAL obs-dal-plugin)
       set_target_properties(${target} PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
@@ -276,7 +276,7 @@ function(set_target_properties_obs target)
       set_target_xcode_properties(
         ${target}
         PROPERTIES PRODUCT_NAME ${target}
-                   PRODUCT_BUNDLE_IDENTIFIER com.obsproject.${target}
+                   PRODUCT_BUNDLE_IDENTIFIER dev.moq.${target}
                    CURRENT_PROJECT_VERSION ${OBS_BUILD_NUMBER}
                    MARKETING_VERSION ${OBS_VERSION_CANONICAL}
                    GENERATE_INFOPLIST_FILE YES
