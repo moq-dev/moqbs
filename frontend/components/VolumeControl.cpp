@@ -52,8 +52,6 @@ VolumeControl::VolumeControl(obs_source_t *source, QWidget *parent, bool vertica
 	  contextMenu(nullptr),
 	  QFrame(parent)
 {
-	setAttribute(Qt::WA_OpaquePaintEvent, true);
-
 	utils = std::make_unique<idian::Utils>(this);
 
 	uuid = obs_source_get_uuid(source);
@@ -474,49 +472,68 @@ void VolumeControl::showVolumeControlMenu(QPoint pos)
 void VolumeControl::renameSource()
 {
 	QAction *action = reinterpret_cast<QAction *>(sender());
-	obs_source_t *source = action->property("source").value<OBSSource>();
+	OBSSource source = action->property("source").value<OBSSource>();
 
-	const char *prevName = obs_source_get_name(source);
+	std::string uuid = obs_source_get_uuid(source);
 
-	for (;;) {
-		std::string name;
-		bool accepted = NameDialog::AskForName(this, QTStr("Basic.Main.MixerRename.Title"),
-						       QTStr("Basic.Main.MixerRename.Text"), name, QT_UTF8(prevName));
-		if (!accepted) {
+	OBSBasic *main = OBSBasic::Get();
+
+	// Defer the rename dialog to avoid blocking the UI thread while the context menu is closing, which can cause issues on some platforms
+	QTimer::singleShot(0, main, [main, uuid]() {
+		if (!main) {
 			return;
 		}
 
-		if (name.empty()) {
-			OBSMessageBox::warning(this, QTStr("NoNameEntered.Title"), QTStr("NoNameEntered.Text"));
-			continue;
+		OBSSourceAutoRelease source = obs_get_source_by_uuid(uuid.c_str());
+		if (!source) {
+			return;
 		}
 
-		OBSSourceAutoRelease sourceTest = obs_get_source_by_name(name.c_str());
+		const char *prevName = obs_source_get_name(source);
 
-		if (sourceTest) {
-			OBSMessageBox::warning(this, QTStr("NameExists.Title"), QTStr("NameExists.Text"));
-			continue;
+		for (;;) {
+			std::string name;
+			bool accepted = NameDialog::AskForName(main, QTStr("Basic.Main.MixerRename.Title"),
+							       QTStr("Basic.Main.MixerRename.Text"), name,
+							       QT_UTF8(prevName));
+			if (!accepted) {
+				return;
+			}
+
+			if (name.empty()) {
+				OBSMessageBox::warning(main, QTStr("NoNameEntered.Title"), QTStr("NoNameEntered.Text"));
+				continue;
+			}
+
+			if (name == prevName) {
+				return;
+			}
+
+			OBSSourceAutoRelease sourceTest = obs_get_source_by_name(name.c_str());
+
+			if (sourceTest) {
+				OBSMessageBox::warning(main, QTStr("NameExists.Title"), QTStr("NameExists.Text"));
+				continue;
+			}
+
+			std::string prevName(obs_source_get_name(source));
+			auto undo = [prevName](const std::string &data) {
+				OBSSourceAutoRelease source = obs_get_source_by_uuid(data.c_str());
+				obs_source_set_name(source, prevName.c_str());
+			};
+
+			std::string editedName = name;
+			auto redo = [editedName](const std::string &data) {
+				OBSSourceAutoRelease source = obs_get_source_by_uuid(data.c_str());
+				obs_source_set_name(source, editedName.c_str());
+			};
+
+			main->undo_s.add_action(QTStr("Undo.Rename").arg(name.c_str()), undo, redo, uuid, uuid);
+
+			obs_source_set_name(source, name.c_str());
+			break;
 		}
-
-		std::string prevName(obs_source_get_name(source));
-		auto undo = [prevName](const std::string &data) {
-			OBSSourceAutoRelease source = obs_get_source_by_uuid(data.c_str());
-			obs_source_set_name(source, prevName.c_str());
-		};
-
-		std::string editedName = name;
-		auto redo = [editedName](const std::string &data) {
-			OBSSourceAutoRelease source = obs_get_source_by_uuid(data.c_str());
-			obs_source_set_name(source, editedName.c_str());
-		};
-
-		OBSBasic *main = OBSBasic::Get();
-		const char *uuid = obs_source_get_uuid(source);
-		main->undo_s.add_action(QTStr("Undo.Rename").arg(name.c_str()), undo, redo, uuid, uuid);
-
-		obs_source_set_name(source, name.c_str());
-		break;
-	}
+	});
 }
 
 void VolumeControl::changeVolume()
@@ -579,7 +596,9 @@ void VolumeControl::updateCategoryLabel()
 	categoryLabel->setText(labelText);
 
 	utils->polishChildren();
-	volumeMeter->updateBackgroundCache();
+
+	bool forceUpdate = true;
+	volumeMeter->updateBackgroundCache(forceUpdate);
 }
 
 void VolumeControl::updateDecayRate()
@@ -691,17 +710,17 @@ void VolumeControl::updateMixerState()
 	bool isActive = obs_source_active(source) && obs_source_audio_active(source);
 
 	mixerStatus().set(VolumeControl::MixerStatus::Active, isActive);
-	setUseDisabledColors(!isActive);
 	mixerStatus().set(VolumeControl::MixerStatus::Unassigned, unassigned);
 
 	QSignalBlocker blockMute(muteButton);
 	QSignalBlocker blockMonitor(monitorButton);
 
 	bool showAsMuted = muted || monitoringType == OBS_MONITORING_TYPE_MONITOR_ONLY;
-	bool showAsMonitored = monitoringType != OBS_MONITORING_TYPE_NONE;
+	bool showAsMonitored = !muted && monitoringType != OBS_MONITORING_TYPE_NONE;
 	bool showAsUnassigned = !muted && unassigned;
 
 	volumeMeter->setMuted((showAsMuted || showAsUnassigned) && !showAsMonitored);
+	setUseDisabledColors(showAsMuted);
 
 	// Qt doesn't support overriding the QPushButton icon using pseudo state selectors like :checked
 	// in QSS so we set a checked class selector on the button to be used instead.
