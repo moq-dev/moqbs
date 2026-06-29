@@ -1,6 +1,0 @@
-build_macos/
-build_ubuntu/
-build_x64/
-build_linux/
-.deps/
-.wrangler/
